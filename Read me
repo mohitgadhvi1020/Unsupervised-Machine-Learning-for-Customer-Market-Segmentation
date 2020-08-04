@@ -1,15 +1,65 @@
-Understand the problem statement and business case
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from jupyterthemes import jtplot
+jtplot.style(theme='monokai', context='notebook', ticks=True, grid=False) 
 
-Import libraries and datasets
 
-Visualize and explore datasets
+creditcard_df = pd.read_csv('Marketing_data.csv')
 
-Understand the theory and intuition behind k-means clustering machine learning algorithm
+# CUSTID: Identification of Credit Card holder 
+# BALANCE: Balance amount left in customer's account to make purchases
+# BALANCE_FREQUENCY: How frequently the Balance is updated, score between 0 and 1 (1 = frequently updated, 0 = not frequently updated)
+# PURCHASES: Amount of purchases made from account
+# ONEOFFPURCHASES: Maximum purchase amount done in one-go
+# INSTALLMENTS_PURCHASES: Amount of purchase done in installment
+# CASH_ADVANCE: Cash in advance given by the user
+# PURCHASES_FREQUENCY: How frequently the Purchases are being made, score between 0 and 1 (1 = frequently purchased, 0 = not frequently purchased)
+# ONEOFF_PURCHASES_FREQUENCY: How frequently Purchases are happening in one-go (1 = frequently purchased, 0 = not frequently purchased)
+# PURCHASES_INSTALLMENTS_FREQUENCY: How frequently purchases in installments are being done (1 = frequently done, 0 = not frequently done)
+# CASH_ADVANCE_FREQUENCY: How frequently the cash in advance being paid
+# CASH_ADVANCE_TRX: Number of Transactions made with "Cash in Advance"
+# PURCHASES_TRX: Number of purchase transactions made
+# CREDIT_LIMIT: Limit of Credit Card for user
+# PAYMENTS: Amount of Payment done by user
+# MINIMUM_PAYMENTS: Minimum amount of payments made by user  
+# PRC_FULL_PAYMENT: Percent of full payment paid by user
+# TENURE: Tenure of credit card service for user
 
-Learn how to obtain the optimal number of clusters using the elbow method
+# Let's scale the data first
+scaler = StandardScaler()
+creditcard_df_scaled = scaler.fit_transform(creditcard_df)
 
-Use Scikit-Learn library to find the optimal number of clusters using elbow method
+kmeans = KMeans(7)
+kmeans.fit(creditcard_df_scaled)
+labels = kmeans.labels_
 
-Apply k-means using Scikit-Learn to perform customer segmentation
+cluster_centers = pd.DataFrame(data = kmeans.cluster_centers_, columns = [creditcard_df.columns])
+cluster_centers
 
-Apply Principal Component Analysis (PCA) technique to perform dimensionality reduction and data visualization
+cluster_centers = scaler.inverse_transform(cluster_centers)
+cluster_centers = pd.DataFrame(data = cluster_centers, columns = [creditcard_df.columns])
+
+y_kmeans = kmeans.fit_predict(creditcard_df_scaled)
+y_kmeans
+
+# Obtain the principal components 
+pca = PCA(n_component = 2 )
+principal_comp = pca.fit_transform(creditcard_df_scaled)
+principal_comp
+
+# Create a dataframe with the two components
+pca_df = pd.DataFrame(data = principal_comp, columns =['pca1','pca2'])
+pca_df.head()
+
+# Concatenate the clusters labels to the dataframe
+pca_df = pd.concat([pca_df,pd.DataFrame({'cluster':labels})], axis = 1)
+pca_df.head()
+
+plt.figure(figsize=(10,10))
+ax = sns.scatterplot(x="pca1", y="pca2", hue = "cluster", data = pca_df, palette =['red','green','blue','pink','yellow','gray','purple', 'black'])
+plt.show()
